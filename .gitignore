@@ -1,8 +1,6 @@
 .vscode
+__pycache__/
 log.conf
-data/tasktracking.db
+data
 venv
-tasktracker/__pycache__/taskdb.cpython-38.pyc
-tasktracker/__pycache__/ttclasses.cpython-38.pyc
-logs/tasktracker.log
-data/devtasktracking.db
+logs
