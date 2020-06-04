@@ -1,0 +1,47 @@
+version: 1
+
+formatters:
+  simple:
+    format: "%(asctime)s %(name)s: %(message)s"
+  extended:
+    format: "%(asctime)s %(levelname)s [%(name)s-func:%(funcName)s] - %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: WARNING
+    formatter: simple
+
+  ether:
+   class: logging.NullHandler
+   level: NOTSET
+   formatter: simple
+
+  dbfile_handler:
+      class: logging.handlers.RotatingFileHandler
+      level: DEBUG
+      formatter: extended
+      filename: ./logs/db.log
+      maxBytes: 2097152 # 2MB
+      backupCount: 2
+
+  file_handler:
+      class: logging.handlers.RotatingFileHandler
+      level: DEBUG
+      formatter: extended
+      filename: ./logs/tasktracker.log
+      mode: a+
+      maxBytes: 2097152 # 2MB
+      backupCount: 2
+
+loggers:
+  TaskTracker:
+    level: DEBUG
+    handlers: [file_handler]
+  taskdb:
+    level: DEBUG
+    handlers: [dbfile_handler]
+
+root:
+  level: WARNING
+  handlers: [console]
