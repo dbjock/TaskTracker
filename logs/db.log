@@ -5,3 +5,10 @@
 2020-06-04 15:03:56,827 DEBUG [taskdb-func:getTasks] - Getting list of tasks
 2020-06-04 15:03:56,837 DEBUG [taskdb-func:getActiveTask] - Getting List of Active Tasks
 2020-06-04 15:03:56,838 DEBUG [taskdb-func:getActiveTask] - rows fetched: 0
+2020-06-04 17:31:35,736 DEBUG [taskdb-func:create_connection] - dbfile = data/tasktracking.db
+2020-06-04 17:31:35,736 DEBUG [taskdb-func:create_connection] - DB Connection successful to : data/tasktracking.db
+2020-06-04 17:31:35,737 DEBUG [taskdb-func:create_connection] - sqlite3 version 2.6.0
+2020-06-04 17:31:35,738 INFO [taskdb-func:create_connection] - Database Connection created
+2020-06-04 17:31:35,738 DEBUG [taskdb-func:getTasks] - Getting list of tasks
+2020-06-04 17:31:35,746 DEBUG [taskdb-func:getActiveTask] - Getting List of Active Tasks
+2020-06-04 17:31:35,746 DEBUG [taskdb-func:getActiveTask] - rows fetched: 0
