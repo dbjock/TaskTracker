@@ -3,7 +3,8 @@ import datetime
 import sqlite3
 import sys
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('taskdb')
+
 
 def create_connection(dbFile):
     """
@@ -15,12 +16,13 @@ def create_connection(dbFile):
     """
     logger.debug(f"dbfile = {dbFile}")
     if dbFile is None or dbFile == "":
-        logger.critical (f"This is a value error", exc_info=True)
+        logger.critical(f"This is a value error", exc_info=True)
         raise ValueError("dbFile must contain a value")
     try:
         conn = sqlite3.connect(dbFile)
         cur = conn.cursor()
-        cur.execute("PRAGMA foreign_keys = ON") #Turning on foreign_key enforcement
+        # Turning on foreign_key enforcement
+        cur.execute("PRAGMA foreign_keys = ON")
 
         logger.debug(f"DB Connection successful to : {dbFile}")
         logger.debug(f"sqlite3 version {sqlite3.version}")
@@ -28,22 +30,22 @@ def create_connection(dbFile):
         logger.critical(f"Error:  {err}", exc_info=True)
         sys.exit()
 
-    #Check required database objects and if missing create.
+    # Check required database objects and if missing create.
     sql = "SELECT name FROM sqlite_master WHERE name='task'"
     c = conn.cursor()
     c.execute(sql)
-    if c.fetchone() is None: # Creating task table
+    if c.fetchone() is None:  # Creating task table
         logger.info(f"Creating task table")
         createSql = """CREATE TABLE task (
         id   INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
         name TEXT UNIQUE NOT NULL COLLATE NOCASE,
         [desc] TEXT)"""
-        _exeSql(conn,createSql)
+        _exeSql(conn, createSql)
 
     sql = "SELECT name FROM sqlite_master WHERE name='tracking'"
     c = conn.cursor()
     c.execute(sql)
-    if c.fetchone() is None: # Creating tracking table
+    if c.fetchone() is None:  # Creating tracking table
         logger.info(f"Creating tracking table")
         createSql = """CREATE TABLE tracking (
         id      INTEGER  PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
@@ -51,12 +53,12 @@ def create_connection(dbFile):
                                         ON UPDATE CASCADE,
         started DATETIME UNIQUE NOT NULL,
         ended   DATETIME)"""
-        _exeSql(conn,createSql)
+        _exeSql(conn, createSql)
 
     sql = "SELECT name FROM sqlite_master WHERE name='v_hours_wrked_detail'"
     c = conn.cursor()
     c.execute(sql)
-    if c.fetchone() is None: # Create the v_hours_wrked_detail view
+    if c.fetchone() is None:  # Create the v_hours_wrked_detail view
         logger.info(f"Creating v_hours_wrked_detail")
         createSql = """CREATE VIEW v_hours_wrked_detail AS
         SELECT task.id AS task_id,
@@ -70,12 +72,13 @@ def create_connection(dbFile):
         tracking AS track ON task.id = track.task_id
         WHERE NOT track.ended IS NULL
         ORDER BY started"""
-        _exeSql(conn,createSql)
+        _exeSql(conn, createSql)
 
     logger.info("Database Connection created")
     return conn
 
-def _exeSql(dbConn,exeSql):
+
+def _exeSql(dbConn, exeSql):
     """Executes exeSql.
 
     PARMS
@@ -93,6 +96,7 @@ def _exeSql(dbConn,exeSql):
     except Exception as err:
         logger.critical(f"Error:  {err}", exc_info=True)
         sys.exit()
+
 
 def getTasks(dbConn):
     """Gets a list of tasks
@@ -112,6 +116,7 @@ def getTasks(dbConn):
 
     return cursor.fetchall()
 
+
 def getActiveTask(dbConn):
     """
     Returns a list of Tasks which are active by determining they have no end time.
@@ -122,7 +127,7 @@ def getActiveTask(dbConn):
     """
 
     logger.debug(f"Getting List of Active Tasks")
-    sql="""SELECT task.id as taskID, name as Task_name, tracking.id as Tracking_id, task.desc as Task_Desc
+    sql = """SELECT task.id as taskID, name as Task_name, tracking.id as Tracking_id, task.desc as Task_Desc
     FROM task
     JOIN tracking ON task.id = tracking.task_id
     WHERE tracking.ended = '' OR tracking.ended IS NULL
@@ -138,7 +143,8 @@ def getActiveTask(dbConn):
     logger.debug(f"rows fetched: {len(rows)}")
     return rows
 
-def addTask(dbConn,taskName="", taskDesc=""):
+
+def addTask(dbConn, taskName="", taskDesc=""):
     """Add a Task to database
 
     PARMS
@@ -148,16 +154,16 @@ def addTask(dbConn,taskName="", taskDesc=""):
     return true/False (Assumption False is due to taskName not unique)
     """
     logger.debug(f"attempt to add task name: {taskName}")
-    theVals = (taskName,taskDesc)
+    theVals = (taskName, taskDesc)
     sql = "INSERT into task (name, desc) VALUES(?,?)"
     logger.debug(f"SQL: {sql}")
     logger.debug(f"theVals: {theVals}")
     try:
         dbCursor = dbConn.cursor()
-        dbCursor.execute(sql,theVals)
+        dbCursor.execute(sql, theVals)
         dbConn.commit()
     except sqlite3.IntegrityError as err:
-        #UNIQUE constraint failed
+        # UNIQUE constraint failed
         logger.debug(f"Integrity Error={err}.")
         return False
     except Exception as err:
@@ -166,6 +172,7 @@ def addTask(dbConn,taskName="", taskDesc=""):
 
     logger.debug("task added")
     return True
+
 
 def changeTask(dbConn, taskID, newName=None, newDesc=None):
     """Change a task's name and/or description
@@ -195,10 +202,10 @@ def changeTask(dbConn, taskID, newName=None, newDesc=None):
     logger.debug(f"theVals: {theVals}")
     try:
         dbCursor = dbConn.cursor()
-        dbCursor.execute(sql,theVals)
+        dbCursor.execute(sql, theVals)
         dbConn.commit()
     except sqlite3.IntegrityError as err:
-        #UNIQUE constraint failed
+        # UNIQUE constraint failed
         logger.debug(f"Integrity Error={err}.")
         return False
     except Exception as err:
@@ -207,7 +214,8 @@ def changeTask(dbConn, taskID, newName=None, newDesc=None):
 
     return True
 
-def setTaskTrack(dbConn,taskID,timeValue,trackID=None):
+
+def setTaskTrack(dbConn, taskID, timeValue, trackID=None):
     """Start or end tracking for a Task
 
     PARM:
@@ -218,22 +226,24 @@ def setTaskTrack(dbConn,taskID,timeValue,trackID=None):
               If not provided new trackID record, with timeValue as starttime.
     return: True/False
     """
-    if trackID: #trackID has been provided
-        logger.info(f"UPDATE trackingID: {trackID} for taskID {taskID} endtime {f'{timeValue}'}.")
+    if trackID:  # trackID has been provided
+        logger.info(
+            f"UPDATE trackingID: {trackID} for taskID {taskID} endtime {f'{timeValue}'}.")
         theVals = (timeValue, trackID)
         sql = "UPDATE tracking SET ended = ? WHERE id = ?"
     else:
-        logger.info(f"Creating trackingID: for taskID {taskID}, startime {f'{timeValue}'}")
+        logger.info(
+            f"Creating trackingID: for taskID {taskID}, startime {f'{timeValue}'}")
         theVals = (taskID, timeValue)
         sql = "INSERT into tracking (task_id, started) VALUES(?,?)"
     logger.debug(f"SQL: {sql}")
     logger.debug(f"Values: {theVals}")
     try:
         dbCursor = dbConn.cursor()
-        dbCursor.execute(sql,theVals)
+        dbCursor.execute(sql, theVals)
         dbConn.commit()
     except sqlite3.IntegrityError as err:
-        #UNIQUE constraint failed
+        # UNIQUE constraint failed
         logger.debug(f"Integrity Error={err}.")
         return False
     except Exception as err:
@@ -243,7 +253,8 @@ def setTaskTrack(dbConn,taskID,timeValue,trackID=None):
     logger.debug("tracking update")
     return True
 
-def getTaskID(dbConn,taskName):
+
+def getTaskID(dbConn, taskName):
     """Get the taskID from a task name
 
     PARM:
@@ -258,7 +269,7 @@ def getTaskID(dbConn,taskName):
     logger.debug(f"theVals: {theVals}")
     try:
         cursor = dbConn.cursor()
-        cursor.execute(sql,theVals)
+        cursor.execute(sql, theVals)
     except Exception as err:
         logger.critical(f"Unexpected Error:  {err}", exc_info=True)
         sys.exit()
@@ -267,7 +278,8 @@ def getTaskID(dbConn,taskName):
     logger.debug(f"returning {result}")
     return result
 
-def rptHours(dbConn,startDateUTC,endDateUTC,taskName=None):
+
+def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     """Return a list of hours worked by mont for the taskName
 
     PARM
@@ -278,10 +290,13 @@ def rptHours(dbConn,startDateUTC,endDateUTC,taskName=None):
     RETURN:
     list (YYYY-MM-DD, taskName, hoursWorked)
     """
-    logger.debug(f"startDateUTC: {startDateUTC.isoformat()}, endDateUTC: {endDateUTC.isoformat()}, taskName: {taskName}")
+    logger.debug(
+        f"startDateUTC: {startDateUTC.isoformat()}, endDateUTC: {endDateUTC.isoformat()}, taskName: {taskName}")
 
-    logger.info(f"Getting hours worked from {startDateUTC.isoformat()} to {endDateUTC.isoformat()}")
-    theVals = {'taskName': taskName, 'startDateUTC': startDateUTC, 'endDateUTC': endDateUTC}
+    logger.info(
+        f"Getting hours worked from {startDateUTC.isoformat()} to {endDateUTC.isoformat()}")
+    theVals = {'taskName': taskName,
+               'startDateUTC': startDateUTC, 'endDateUTC': endDateUTC}
     logger.debug(f"theVals: {theVals}")
     selectSQL = """Select strftime('%Y-%m-%d',started) as Track_Date_gmt, task_name, sum(hours_worked) as hours_worked
     FROM v_hours_wrked_detail as vWrkDetail """
@@ -291,12 +306,11 @@ def rptHours(dbConn,startDateUTC,endDateUTC,taskName=None):
     if taskName:
         whereSQL += "AND task_name = :taskName"
 
-
     sql = selectSQL + whereSQL + groupBySQL + orderBySQL
     logger.debug(f"SQL: {sql}")
     cursor = dbConn.cursor()
     try:
-        cursor.execute(sql,theVals)
+        cursor.execute(sql, theVals)
     except Exception as err:
         logger.critical(f"Unexpected Error:  {err}", exc_info=True)
         sys.exit()
@@ -304,6 +318,7 @@ def rptHours(dbConn,startDateUTC,endDateUTC,taskName=None):
     rows = cursor.fetchall()
     logger.debug(f"rows fetched: {len(rows)}")
     return rows
+
 
 if __name__ == '__main__':
     pass
