@@ -2,5 +2,5 @@
 __pycache__/
 log.conf
 data
-venv
-logs
+venv/
+logs/
