@@ -14,7 +14,6 @@ import csv
 
 # App custom modules
 from tasktracker import taskdb
-from tasktracker import ttclasses
 
 APP_VER = "2.01.BETA"
 logger = logging.getLogger("TaskTracker")
@@ -234,10 +233,9 @@ def reportHours(dbConn, startDate, endDate, taskName=None, exportFile=None):
                 tasklen = len(row[1])
         # Print to screen
         for row in rptRows:
-            taskDW = DailyTaskWrkedHours(row[1], row[0], row[2])
-            rptDate = taskDW.localUTC().strftime('%Y-%m-%d')
-            taskName = taskDW.taskName
-            workedStr = taskDW.hoursDT()
+            rptDate = row[0]
+            taskName = row[1]
+            workedStr = "{:.1f}".format(row[2]) + " Hours"
             print(f"\t{rptDate} {taskName:{tasklen}} {workedStr}")
     else:
         logger.info(f"No work hours to report")
@@ -273,14 +271,13 @@ def _rptExport(rptRows, fileName):
     fileName : csv path and fileName
     """
     logger.info(f"Exporting report data to {fileName}")
-    with open(fileName, mode='w') as csvFile:
+    with open(fileName, mode='w', newline='\n') as csvFile:
         row_writer = csv.writer(csvFile, dialect='excel')
         row_writer.writerow(["Report Date", "Task", "Hours Worked"])
         for row in rptRows:
-            taskDW = DailyTaskWrkedHours(row[1], row[0], row[2])
-            rptDate = taskDW.localUTC().strftime('%Y-%m-%d')
-            taskName = taskDW.taskName
-            workedStr = taskDW.hoursDT()
+            rptDate = row[0]
+            taskName = row[1]
+            workedStr = "{:.1f}".format(row[2])
             row_writer.writerow([rptDate, taskName, workedStr])
 
 

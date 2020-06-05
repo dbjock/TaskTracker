@@ -288,6 +288,46 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     endDateUTC: datetime obj in UTC time. This is the end date (inclusive).
     taskName : name of the task looking for. not case sensitve
     RETURN:
+    list (trackDateLocal, taskName, hours_Worked)
+    """
+    logger.debug(
+        f"startDateUTC: {startDateUTC.isoformat()}, endDateUTC: {endDateUTC.isoformat()}, taskName: {taskName}")
+
+    logger.info(
+        f"Getting hours worked from {startDateUTC.isoformat()} to {endDateUTC.isoformat()}")
+    theVals = {'taskName': taskName,
+               'startDateUTC': startDateUTC, 'endDateUTC': endDateUTC}
+    logger.debug(f"theVals: {theVals}")
+    selectSQL = """Select strftime("%Y-%m-%d",datetime(strftime("%s",started),'unixepoch', 'localtime')) as trackDateLocal, task_name, sum(hours_worked) as hours_worked FROM v_hours_wrked_detail as vWrkDetail """
+    groupBySQL = "GROUP BY strftime('%Y-%m-%d',datetime(strftime('%s',started),'unixepoch', 'localtime')), task_name "
+    orderBySQL = "ORDER BY strftime('%Y-%m-%d',started) DESC "
+    whereSQL = "WHERE started between date(:startDateUTC) and date(:endDateUTC,'+1 day')"
+    if taskName:
+        whereSQL += "AND task_name = :taskName"
+
+    sql = selectSQL + whereSQL + groupBySQL + orderBySQL
+    logger.debug(f"SQL: {sql}")
+    cursor = dbConn.cursor()
+    try:
+        cursor.execute(sql, theVals)
+    except Exception as err:
+        logger.critical(f"Unexpected Error:  {err}", exc_info=True)
+        sys.exit()
+
+    rows = cursor.fetchall()
+    logger.debug(f"rows fetched: {len(rows)}")
+    return rows
+
+
+def OLDrptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
+    """Return a list of hours worked by mont for the taskName
+
+    PARM
+    dbConn : DB connection object
+    startDateUTC: datetime obj in UTC time. This is the start time
+    endDateUTC: datetime obj in UTC time. This is the end date (inclusive).
+    taskName : name of the task looking for. not case sensitve
+    RETURN:
     list (YYYY-MM-DD, taskName, hoursWorked)
     """
     logger.debug(
