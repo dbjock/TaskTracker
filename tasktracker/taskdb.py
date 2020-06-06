@@ -7,12 +7,12 @@ logger = logging.getLogger('taskdb')
 
 
 def create_connection(dbFile):
-    """
-    Create a Sqlite3 datbase connection to dbfile
+    """Create a Sqlite3 datbase connection to dbfile
 
-    PARM
-    dbfile : database file to connect
-    Return -  Sqlite3 connection object or None
+    Args:
+      dbfile : database file to connect
+    Returns:
+      Sqlite3 connection object or None
     """
     logger.debug(f"dbfile = {dbFile}")
     if dbFile is None or dbFile == "":
@@ -81,10 +81,11 @@ def create_connection(dbFile):
 def _exeSql(dbConn, exeSql):
     """Executes exeSql.
 
-    PARMS
-     dbConn    : Sqlite connection obj
-     createSql : Create table sql statment
-    Return - True if successfull
+    Args:
+      dbConn    : database connection obj
+      createSql : Create table sql statment
+    Returns:
+      True if successfull
     """
     logger.debug(f"executing sql: {exeSql}")
     try:
@@ -101,9 +102,11 @@ def _exeSql(dbConn, exeSql):
 def getTasks(dbConn):
     """Gets a list of tasks
 
-    PARM:
-    dbConn : dbConnection
-    returns a list (TaskID, TaskName, TaskDesc)"""
+    Args:
+      dbConn : database connection obj
+
+    Returns:
+      list (TaskID, TaskName, TaskDesc)"""
 
     logger.debug("Getting list of tasks")
     sql = "SELECT task.id, task.name, task.desc from TASK ORDER by task.name"
@@ -118,13 +121,13 @@ def getTasks(dbConn):
 
 
 def getActiveTask(dbConn):
-    """
-    Returns a list of Tasks which are active by determining they have no end time.
+    """Get a list of Active Tasks
 
-    PARMS:
-    dbconn : db connection
-    Returns a list (TaskID, TaskName, Tracking_id, TaskDesc)
-    """
+    Args:
+      dbConn : database connection obj
+
+    Returns:
+      list (TaskID, TaskName, Tracking_id, TaskDesc)"""
 
     logger.debug(f"Getting List of Active Tasks")
     sql = """SELECT task.id as taskID, name as Task_name, tracking.id as Tracking_id, task.desc as Task_Desc
@@ -147,12 +150,13 @@ def getActiveTask(dbConn):
 def addTask(dbConn, taskName="", taskDesc=""):
     """Add a Task to database
 
-    PARMS
-    dbconn : DB connection object
-    taskName : str name of the task (case insensitve)
-    taskDesc : str description of the task
-    return true/False (Assumption False is due to taskName not unique)
-    """
+    Args:
+      dbConn : database connection obj
+      taskName : str name of the task (case insensitve)
+      taskDesc : str description of the task
+
+    Returns:
+      True/False (Assumption False is due to taskName not unique)"""
     logger.debug(f"attempt to add task name: {taskName}")
     theVals = (taskName, taskDesc)
     sql = "INSERT into task (name, desc) VALUES(?,?)"
@@ -177,12 +181,15 @@ def addTask(dbConn, taskName="", taskDesc=""):
 def changeTask(dbConn, taskID, newName=None, newDesc=None):
     """Change a task's name and/or description
 
-    PARMS
-    dbconn : DB connection object
-    taskName : requried str. Task name that is changing (case insensitve)
-    newName : str new name of the task (case insensitve)
-    newDesc : str new desc of the task
-    return : True/False (False = assume the newName is not unique)
+    Args:
+      dbConn   : database connection obj
+      taskID   : Unique ID for the task to be changed
+      newName  : str new name of the task (case insensitve)
+      newDesc  : str new desc of the task (optional)
+
+    Returns:
+      True/False
+      False = did not update. Assumption the newName is not unique
     """
     logger.debug(f"taskID = {taskID}, newName={newName}, newDesc={newDesc}")
     theVals = {'taskID': taskID, 'newName': newName, 'newDesc': newDesc}
@@ -218,13 +225,15 @@ def changeTask(dbConn, taskID, newName=None, newDesc=None):
 def setTaskTrack(dbConn, taskID, timeValue, trackID=None):
     """Start or end tracking for a Task
 
-    PARM:
-    dbConn: DB connection object
-    taskID : taskID to start/end the tracking for
-    timeValue : The UTC time value for starting/ending
-    trackID : If provided timeValue is the endtime.
-              If not provided new trackID record, with timeValue as starttime.
-    return: True/False
+    Args:
+      dbConn : database connection obj
+      taskID : Unique ID for the task that is going to be tracked
+      timeValue : The UTC time value for starting/ending
+      trackID : If provided timeValue is the endtime.
+                If not provided new trackID record, with timeValue as starttime.
+
+    Returns:
+      True/False (True worked, False did not work)
     """
     if trackID:  # trackID has been provided
         logger.info(
@@ -257,10 +266,12 @@ def setTaskTrack(dbConn, taskID, timeValue, trackID=None):
 def getTaskID(dbConn, taskName):
     """Get the taskID from a task name
 
-    PARM:
-    dbConn : DB connection object
-    taskName : name of the task looking for. not case sensitve
-    returns a list (taskID,taskName,taskDesc) (list length 0 nothing found)
+    Args:
+      dbConn : database connection obj
+      taskName : name of the task looking for. (case insensitve)
+
+    Returns:
+      list (taskID,taskName,taskDesc) (list length 0 nothing found)
     """
     logger.debug(f"Getting taskid for task '{taskName}'")
     theVals = (taskName,)
@@ -282,13 +293,14 @@ def getTaskID(dbConn, taskName):
 def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     """Return a list of hours worked by mont for the taskName
 
-    PARM
-    dbConn : DB connection object
-    startDateUTC: datetime obj in UTC time. This is the start time
-    endDateUTC: datetime obj in UTC time. This is the end date (inclusive).
-    taskName : name of the task looking for. not case sensitve
-    RETURN:
-    list (trackDateLocal, taskName, hours_Worked)
+    Args:
+      dbConn : database connection obj
+      startDateUTC: datetime obj in UTC time. This is the start time
+      endDateUTC: datetime obj in UTC time. This is the end date (inclusive).
+      taskName : name of the task looking for. (case insensitve)
+
+    Returns:
+      list (trackDateLocal, taskName, hours_Worked)
     """
     logger.debug(
         f"startDateUTC: {startDateUTC.isoformat()}, endDateUTC: {endDateUTC.isoformat()}, taskName: {taskName}")
@@ -302,47 +314,6 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     groupBySQL = "GROUP BY strftime('%Y-%m-%d',datetime(strftime('%s',started),'unixepoch', 'localtime')), task_name "
     orderBySQL = "ORDER BY strftime('%Y-%m-%d',started) DESC "
     whereSQL = "WHERE started between date(:startDateUTC) and date(:endDateUTC,'+1 day')"
-    if taskName:
-        whereSQL += "AND task_name = :taskName"
-
-    sql = selectSQL + whereSQL + groupBySQL + orderBySQL
-    logger.debug(f"SQL: {sql}")
-    cursor = dbConn.cursor()
-    try:
-        cursor.execute(sql, theVals)
-    except Exception as err:
-        logger.critical(f"Unexpected Error:  {err}", exc_info=True)
-        sys.exit()
-
-    rows = cursor.fetchall()
-    logger.debug(f"rows fetched: {len(rows)}")
-    return rows
-
-
-def OLDrptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
-    """Return a list of hours worked by mont for the taskName
-
-    PARM
-    dbConn : DB connection object
-    startDateUTC: datetime obj in UTC time. This is the start time
-    endDateUTC: datetime obj in UTC time. This is the end date (inclusive).
-    taskName : name of the task looking for. not case sensitve
-    RETURN:
-    list (YYYY-MM-DD, taskName, hoursWorked)
-    """
-    logger.debug(
-        f"startDateUTC: {startDateUTC.isoformat()}, endDateUTC: {endDateUTC.isoformat()}, taskName: {taskName}")
-
-    logger.info(
-        f"Getting hours worked from {startDateUTC.isoformat()} to {endDateUTC.isoformat()}")
-    theVals = {'taskName': taskName,
-               'startDateUTC': startDateUTC, 'endDateUTC': endDateUTC}
-    logger.debug(f"theVals: {theVals}")
-    selectSQL = """Select strftime('%Y-%m-%d',started) as Track_Date_gmt, task_name, sum(hours_worked) as hours_worked
-    FROM v_hours_wrked_detail as vWrkDetail """
-    groupBySQL = "GROUP BY strftime('%Y-%m-%d',started), task_name "
-    orderBySQL = "ORDER BY strftime('%Y-%m-%d',started) DESC "
-    whereSQL = "WHERE started >= :startDateUTC AND ended <= :endDateUTC "
     if taskName:
         whereSQL += "AND task_name = :taskName"
 
