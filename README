@@ -1,2 +1,28 @@
+TaskTracker is a python application for tracking time you spend on a task. This is all done from the command line.
+
+Python version 3.7, 3.8
+
+Required pip modules:
+PyYAML => 5.3.1
+
+---------------------------
+Usage
+---------------------------
+python tasktracker.py [-h] [-e] {add,edit,list,report,track} ...
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e                    End trackingcommand options are found with tasktracker -h
+
+-e is used to stop tracking the current trask
+
+Further details of the command help can be found:
+add -h
+edit -h
+list -h
+report -h
+track -h
+---------------------------------------------------------------------------------------
 Changes
-2.01 - Ability to get report from tasktracker database
+2.00 - Didn't exist in github yet.
+2.01 - Report allows exporting, and reformated output.
