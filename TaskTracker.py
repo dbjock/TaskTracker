@@ -1,7 +1,3 @@
-# TODO:
-#   2.01- Reporting command changed to better reports.
-# ISSUES: Report is having issues with UTC - Local. I know there was work done Friday 5/29 eve Central time. 5-6pm on splunk
-
 # Required base modules
 from pathlib import Path
 import logging
@@ -15,7 +11,7 @@ import csv
 # App custom modules
 from tasktracker import taskdb
 
-APP_VER = "2.01"
+APP_VER = "2.02"
 logger = logging.getLogger("TaskTracker")
 
 with open("log.conf", 'rt') as f:
@@ -66,9 +62,43 @@ def addingTask(dbConn, taskName="", taskDesc=""):
     logger.info(
         f"Add task '{taskName}' to database. Description: '{taskDesc}'")
     if taskdb.addTask(dbConn, taskName=taskName, taskDesc=taskDesc):  # Succesfully added
-        print(f"Task '{taskName}' added")
+        msg = f"Task '{taskName}' added"
     else:
-        print(f"Task '{taskName}' already exists")
+        msg = f"Task '{taskName}' already exists"
+
+    logger.info(msg)
+    print(msg)
+
+
+def deleteTask(dbConn, taskName):
+    """Delete a task from database, and all of its tracking"""
+    # Get the taskID for the taskname
+    taskInfo = taskdb.getTaskID(dbConn, taskName)
+    logger.debug(f"taskInfo = {taskInfo}")
+    if taskInfo == None:  # No task found
+        msg = f"'{taskName}' not found"
+        logger.info(msg)
+        print(msg)
+        return
+
+    # Get confirmation
+    confirm = input("  !! Type 'CONFIRM' to delete : ")
+    if confirm != 'CONFIRM':
+        msg = f"Task '{taskInfo[1]}' not deleted. User did not confirm to delete."
+        logger.info(msg)
+        print(msg)
+        return
+
+    # Getter done
+    result = taskdb.delTask(dbConn, taskID=taskInfo[0])
+    if result:
+        msg = f"Task '{taskInfo[1]}' deleted"
+    else:
+        msg = f"Task '{taskInfo[1]}' not deleted see logs"
+
+    logger.info(msg)
+    print(msg)
+    return
 
 
 def editTask(dbConn, orgTaskName, newTaskName=None, newTaskDesc=None):
@@ -98,11 +128,13 @@ def editTask(dbConn, orgTaskName, newTaskName=None, newTaskDesc=None):
     result = taskdb.changeTask(
         dbConn, taskID=taskInfo[0], newName=newTaskName, newDesc=newTaskDesc)
     if result:
-        # taskInfo = taskdb.getTaskID(dbConn,newTaskName)
-        print("Task updated")
-        # print(f"'{orgTaskName}' updated. Task: {taskInfo[1]} ({taskInfo[2]})")
+        msg = "Task Update"
     else:
-        print(f"'{orgTaskName}' not update. Task name already exists")
+        msg = f"'{orgTaskName}' not update. Task name already exists"
+
+    logger.info(msg)
+    print(msg)
+    return
 
 
 def deactivateTasks(dbConn, utc_dt, silent=False):
@@ -282,7 +314,6 @@ def _rptExport(rptRows, fileName):
 
 
 def main(parser):
-    logger.info("======= START ======= ")
     # Ensure path to database exists.
     dbFile = "data/tasktracking.db"
     path = Path(dbFile)
@@ -304,7 +335,9 @@ def main(parser):
         logger.info(f"Reporting command")
         reportHours(trackingDB, args.startdate, args.lastdate,
                     taskName=args.taskName, exportFile=args.exportfile)
-
+    elif args.command == 'delete':
+        logger.info(f"Deleting task '{args.taskname}'")
+        deleteTask(trackingDB, taskName=args.taskname)
     elif args.command == 'add':
         if args.taskdesc:
             taskdesc = args.taskdesc
@@ -317,33 +350,13 @@ def main(parser):
         logger.info(f"Option Edit task '{args.taskname}'")
         editTask(trackingDB, orgTaskName=args.taskname,
                  newTaskName=args.newName, newTaskDesc=args.newDesc)
-    sys.exit()
-    # Below are going to be deprecated
-    if args.new_taskName:  # Adding a task
-        logger.info(
-            f"option to add a new task - task name {args.new_taskName}")
-        addTask(trackingDB, args.new_taskName)
-    elif args.l:  # List tasks
-        logger.info(f"option for listing tasks")
-        listTask(trackingDB)
-        sys.exit()
-    elif args.e:  # End tracking
-        logger.info("option to end task tracking")
-        utcNow = local_to_utc(datetime.now())
-        deactivateTasks(trackingDB, utcNow)
-        sys.exit()
-    elif args.track_taskName:  # Tracking time on a Task
-        logger.info(f"option to track task {args.track_taskName}")
-        trackTask(trackingDB, args.track_taskName)
-    elif args.rpt_taskName:  # Reporting hours for a task
-        logger.info(f"option to report hours on a task{args.rpt_taskName}")
-        reportHoursTask(trackingDB, args.rpt_taskName)
-        sys.exit()
-    ############################################
 
 
 if __name__ == '__main__':
-    print(f"Task Tracker version: {APP_VER}")
+    logger.info("======= START ======= ")
+    msg = f"Task Tracker version: {APP_VER}"
+    logger.info(msg)
+    print(msg)
 
     parser = argparse.ArgumentParser(description="Task Tracking app")
     parser.add_argument('-e', help='End tracking', action='store_true')
@@ -358,6 +371,14 @@ if __name__ == '__main__':
     addTaskGroup.add_argument('taskname', help="Name of task to add", type=str)
     addTaskGroup.add_argument(
         '-d', '--desc', help='Description of task',  metavar='taskdesc', type=str, dest='taskdesc')
+
+    # Delete command (Deleting a task)
+    delTask_parser = commandSubparser.add_parser(
+        'delete', help='Delete a task')
+    delTaskGroup = delTask_parser.add_argument_group(
+        "Delete Command (Deleting a Task")
+    delTaskGroup.add_argument(
+        'taskname', help="Name of task to delete", type=str)
 
     # Edit command to edit a task
     editTask_parser = commandSubparser.add_parser('edit', help="Edit a task")
