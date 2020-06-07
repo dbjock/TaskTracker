@@ -108,8 +108,9 @@ def getTasks(dbConn):
     Returns:
       list (TaskID, TaskName, TaskDesc)"""
 
-    logger.debug("Getting list of tasks")
+    logger.info("Getting list of tasks")
     sql = "SELECT task.id, task.name, task.desc from TASK ORDER by task.name"
+    logger.debug(f"SQL: {sql}")
     try:
         cursor = dbConn.cursor()
         cursor.execute(sql)
@@ -117,7 +118,9 @@ def getTasks(dbConn):
         logger.critical(f"Unexpected Error:  {err}", exc_info=True)
         sys.exit()
 
-    return cursor.fetchall()
+    rows = cursor.fetchall()
+    logger.info(f"rows fetched: {len(rows)}")
+    return rows
 
 
 def getActiveTask(dbConn):
@@ -129,12 +132,13 @@ def getActiveTask(dbConn):
     Returns:
       list (TaskID, TaskName, Tracking_id, TaskDesc)"""
 
-    logger.debug(f"Getting List of Active Tasks")
+    logger.info(f"Getting List of Active Tasks")
     sql = """SELECT task.id as taskID, name as Task_name, tracking.id as Tracking_id, task.desc as Task_Desc
     FROM task
     JOIN tracking ON task.id = tracking.task_id
     WHERE tracking.ended = '' OR tracking.ended IS NULL
     ORDER BY task.name"""
+    logger.debug(f"SQL: {sql}")
     try:
         cursor = dbConn.cursor()
         cursor.execute(sql)
@@ -143,7 +147,7 @@ def getActiveTask(dbConn):
         sys.exit()
 
     rows = cursor.fetchall()
-    logger.debug(f"rows fetched: {len(rows)}")
+    logger.info(f"rows fetched: {len(rows)}")
     return rows
 
 
@@ -157,7 +161,7 @@ def addTask(dbConn, taskName="", taskDesc=""):
 
     Returns:
       True/False (Assumption False is due to taskName not unique)"""
-    logger.debug(f"attempt to add task name: {taskName}")
+    logger.info(f"attempt to add task name: {taskName}")
     theVals = (taskName, taskDesc)
     sql = "INSERT into task (name, desc) VALUES(?,?)"
     logger.debug(f"SQL: {sql}")
@@ -168,13 +172,13 @@ def addTask(dbConn, taskName="", taskDesc=""):
         dbConn.commit()
     except sqlite3.IntegrityError as err:
         # UNIQUE constraint failed
-        logger.debug(f"Integrity Error={err}.")
+        logger.info(f"Integrity Error={err}.")
         return False
     except Exception as err:
         logger.critical(f"Unexpected Error:  {err}", exc_info=True)
         sys.exit()
 
-    logger.debug("task added")
+    logger.info("task added")
     return True
 
 
@@ -263,6 +267,36 @@ def setTaskTrack(dbConn, taskID, timeValue, trackID=None):
     return True
 
 
+def delTask(dbConn, taskID):
+    """Delete a Task from the database
+
+    Args:
+      dbConn   : database connection obj
+      taskID   : Unique ID of task to be deleted.
+
+    Returns:
+      True/False
+      False = Did not get deleted
+    """
+    pass
+    logger.info(f"Deleting taskid {taskID}")
+    theVals = (taskID,)
+    sql = "DELETE FROM task where id=?"
+    logger.debug(f"SQL: {sql}")
+    logger.debug(f"theVals: {theVals}")
+
+    try:
+        cursor = dbConn.cursor()
+        cursor.execute(sql, theVals)
+        dbConn.commit()
+    except Exception as err:
+        logger.critical(f"Unexpected Error:  {err}", exc_info=True)
+        sys.exit()
+
+    logger.info(f"taskid {taskID} deleted")
+    return True
+
+
 def getTaskID(dbConn, taskName):
     """Get the taskID from a task name
 
@@ -273,7 +307,7 @@ def getTaskID(dbConn, taskName):
     Returns:
       list(taskID, taskName, taskDesc)(list length 0 nothing found)
     """
-    logger.debug(f"Getting taskid for task '{taskName}'")
+    logger.info(f"Getting taskid for task '{taskName}'")
     theVals = (taskName,)
     sql = "SELECT task.id as taskID, task.name as taskName, desc as taskDesc FROM task WHERE name = ?"
     logger.debug(f"SQL: {sql}")
@@ -286,7 +320,7 @@ def getTaskID(dbConn, taskName):
         sys.exit()
 
     result = cursor.fetchone()
-    logger.debug(f"returning {result}")
+    logger.info(f"returning {result}")
     return result
 
 
@@ -302,7 +336,7 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     Returns:
       list(trackDateLocal, taskName, hours_Worked)
     """
-    logger.debug(
+    logger.info(
         f"startDateUTC: {startDateUTC.isoformat()}, endDateUTC: {endDateUTC.isoformat()}, taskName: {taskName}")
 
     logger.info(
@@ -327,7 +361,7 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
         sys.exit()
 
     rows = cursor.fetchall()
-    logger.debug(f"rows fetched: {len(rows)}")
+    logger.info(f"rows fetched: {len(rows)}")
     return rows
 
 
