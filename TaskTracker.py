@@ -11,7 +11,7 @@ import csv
 # App custom modules
 from tasktracker import taskdb
 
-APP_VER = "2.02"
+APP_VER = "2.02a"
 logger = logging.getLogger("TaskTracker")
 
 with open("log.conf", 'rt') as f:
@@ -197,7 +197,7 @@ def reportHours(dbConn, startDate, endDate, taskName=None, exportFile=None):
     RETURN - nothing
     """
     logger.debug(
-        f"Getting reporting for startDate: {startDate}, endDate: {endDate}, taskName: {taskName},exportFile: {exportFile}")
+        f"Getting reporting for startDate: {startDate}, endDate: {endDate}, taskName: {taskName}, exportFile: {exportFile}")
     startUTC = local_to_utc(startDate)
     # ---------------------
     # Validation steps

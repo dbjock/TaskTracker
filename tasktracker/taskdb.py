@@ -349,7 +349,7 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     orderBySQL = "ORDER BY strftime('%Y-%m-%d',started) DESC "
     whereSQL = "WHERE started between date(:startDateUTC) and date(:endDateUTC,'+1 day')"
     if taskName:
-        whereSQL += "AND task_name = :taskName"
+        whereSQL += "AND task_name = :taskName "
 
     sql = selectSQL + whereSQL + groupBySQL + orderBySQL
     logger.debug(f"SQL: {sql}")
