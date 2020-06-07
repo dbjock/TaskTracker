@@ -18,6 +18,7 @@ optional arguments:
 
 Further details of the command help can be found:
 add -h
+delete -h
 edit -h
 list -h
 report -h
@@ -26,3 +27,4 @@ track -h
 Changes
 2.00 - Didn't exist in github yet.
 2.01 - Report allows exporting, and reformated output.
+2.02 - Ability to delete a task with confirmation required.
