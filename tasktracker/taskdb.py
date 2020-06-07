@@ -226,10 +226,10 @@ def setTaskTrack(dbConn, taskID, timeValue, trackID=None):
     """Start or end tracking for a Task
 
     Args:
-      dbConn : database connection obj
-      taskID : Unique ID for the task that is going to be tracked
-      timeValue : The UTC time value for starting/ending
-      trackID : If provided timeValue is the endtime.
+      dbConn: database connection obj
+      taskID: Unique ID for the task that is going to be tracked
+      timeValue: The UTC time value for starting/ending
+      trackID: If provided timeValue is the endtime.
                 If not provided new trackID record, with timeValue as starttime.
 
     Returns:
@@ -267,11 +267,11 @@ def getTaskID(dbConn, taskName):
     """Get the taskID from a task name
 
     Args:
-      dbConn : database connection obj
-      taskName : name of the task looking for. (case insensitve)
+      dbConn: database connection obj
+      taskName: name of the task looking for. (case insensitve)
 
     Returns:
-      list (taskID,taskName,taskDesc) (list length 0 nothing found)
+      list(taskID, taskName, taskDesc)(list length 0 nothing found)
     """
     logger.debug(f"Getting taskid for task '{taskName}'")
     theVals = (taskName,)
@@ -294,13 +294,13 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     """Return a list of hours worked by mont for the taskName
 
     Args:
-      dbConn : database connection obj
+      dbConn: database connection obj
       startDateUTC: datetime obj in UTC time. This is the start time
-      endDateUTC: datetime obj in UTC time. This is the end date (inclusive).
-      taskName : name of the task looking for. (case insensitve)
+      endDateUTC: datetime obj in UTC time. This is the end date(inclusive).
+      taskName: name of the task looking for. (case insensitve)
 
     Returns:
-      list (trackDateLocal, taskName, hours_Worked)
+      list(trackDateLocal, taskName, hours_Worked)
     """
     logger.debug(
         f"startDateUTC: {startDateUTC.isoformat()}, endDateUTC: {endDateUTC.isoformat()}, taskName: {taskName}")
@@ -310,7 +310,7 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     theVals = {'taskName': taskName,
                'startDateUTC': startDateUTC, 'endDateUTC': endDateUTC}
     logger.debug(f"theVals: {theVals}")
-    selectSQL = """Select strftime("%Y-%m-%d",datetime(strftime("%s",started),'unixepoch', 'localtime')) as trackDateLocal, task_name, sum(hours_worked) as hours_worked FROM v_hours_wrked_detail as vWrkDetail """
+    selectSQL = """Select strftime("%Y-%m-%d", datetime(strftime("%s", started), 'unixepoch', 'localtime')) as trackDateLocal, task_name, sum(hours_worked) as hours_worked FROM v_hours_wrked_detail as vWrkDetail """
     groupBySQL = "GROUP BY strftime('%Y-%m-%d',datetime(strftime('%s',started),'unixepoch', 'localtime')), task_name "
     orderBySQL = "ORDER BY strftime('%Y-%m-%d',started) DESC "
     whereSQL = "WHERE started between date(:startDateUTC) and date(:endDateUTC,'+1 day')"
