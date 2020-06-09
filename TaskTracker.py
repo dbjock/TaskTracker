@@ -11,7 +11,7 @@ import csv
 # App custom modules
 from tasktracker import taskdb
 
-APP_VER = "2.02a"
+APP_VER = "2.03 - BETA"
 logger = logging.getLogger("TaskTracker")
 
 with open("log.conf", 'rt') as f:
@@ -186,6 +186,25 @@ def trackTask(dbConn, taskName):
         print(f"'{taskName}' - NOT FOUND")
 
 
+def purgeWrkHours(dbConn, daysOld, taskName=None):
+    """Purge work detail reords from database that are daysOld and optionaly just for a specific taskName"""
+    msg = f"Purging work hour records older than {daysOld}"
+    if taskName:
+        taskInfo = taskdb.getTaskID(dbConn, taskName)
+        if taskInfo:
+            msg = msg + f" for task '{taskInfo[1]}'"
+        else:  # nothing found
+            msg = f"Unable to find Task '{taskName}'"
+            print(msg)
+            logger.info(msg)
+            return
+    else:
+        msg = msg + f" for all tasks"
+    print(msg)
+    logger.info(msg)
+    taskdb.purgeDetail(dbConn, daysOld, taskName=taskName)
+
+
 def reportHours(dbConn, startDate, endDate, taskName=None, exportFile=None):
     """Report hourse worked
     PARMS:
@@ -350,6 +369,10 @@ def main(parser):
         logger.info(f"Option Edit task '{args.taskname}'")
         editTask(trackingDB, orgTaskName=args.taskname,
                  newTaskName=args.newName, newTaskDesc=args.newDesc)
+    elif args.command == 'purge':
+        logger.info(
+            f"Option purge task working hours older than {args.daysOld}")
+        purgeWrkHours(trackingDB, args.daysOld, taskName=args.taskName)
 
 
 if __name__ == '__main__':
@@ -394,7 +417,17 @@ if __name__ == '__main__':
     # List command to list task(s) TODO: Want this to work like list WSSEMD*
     list_parser = commandSubparser.add_parser('list', help="List all tasks")
 
-    # Report command to report task(s) TODO: Want this to work like list WSSEMD*
+    # Purge command - Purging tracker records
+    purge_parser = commandSubparser.add_parser(
+        'purge', help='Purge working hours')
+    purgeTaskGroup = purge_parser.add_argument_group(
+        "Purge Command (Delete tracked hours)")
+    purgeTaskGroup.add_argument(
+        'daysOld', help='How many days old should be purged', type=int)
+    purgeTaskGroup.add_argument(
+        '-t', '--task', help='Task name to purge work hours', metavar='taskname', type=str, dest='taskName')
+
+    # Report command to report task(s)
     report_parser = commandSubparser.add_parser(
         'report', help="Reporting working hours")
     reportTaskGroup = report_parser.add_argument_group(

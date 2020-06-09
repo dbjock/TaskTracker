@@ -365,5 +365,20 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     return rows
 
 
+def purgeDetail(dbConn, daysOld, taskName=None):
+    """Delete work detail record from database that are daysOld
+
+    Args:
+      dbConn   : database connection obj
+      daysOld  : Days old to purge.
+      taskName : task name to purge. (case insensitve) optional.
+
+    Returns:
+      nothing
+    """
+    logger.info(
+        f"Purging work details hours older than {daysOld} taskName = '{taskName}'")
+
+
 if __name__ == '__main__':
     pass
