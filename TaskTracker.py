@@ -11,7 +11,7 @@ import csv
 # App custom modules
 from tasktracker import taskdb
 
-APP_VER = "Report enhancements"
+APP_VER = "2.03"
 logger = logging.getLogger("TaskTracker")
 
 with open("log.conf", 'rt') as f:
