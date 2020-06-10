@@ -334,7 +334,7 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
       taskName: name of the task looking for. (case insensitve)
 
     Returns:
-      list(trackDateLocal, taskName, hours_Worked)
+      list(trackDateLocal, taskName, hours_Worked, taskDesc)
     """
     logger.info(
         f"startDateUTC: {startDateUTC.isoformat()}, endDateUTC: {endDateUTC.isoformat()}, taskName: {taskName}")
@@ -344,8 +344,8 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     theVals = {'taskName': taskName,
                'startDateUTC': startDateUTC, 'endDateUTC': endDateUTC}
     logger.debug(f"theVals: {theVals}")
-    selectSQL = """Select strftime("%Y-%m-%d", datetime(strftime("%s", started), 'unixepoch', 'localtime')) as trackDateLocal, task_name, sum(hours_worked) as hours_worked FROM v_hours_wrked_detail as vWrkDetail """
-    groupBySQL = "GROUP BY strftime('%Y-%m-%d',datetime(strftime('%s',started),'unixepoch', 'localtime')), task_name "
+    selectSQL = """Select strftime("%Y-%m-%d", datetime(strftime("%s", started), 'unixepoch', 'localtime')) as trackDateLocal, task_name, sum(hours_worked) as hours_worked, task.desc as task_desc FROM v_hours_wrked_detail as vWrkDetail JOIN task on task.id = task_id """
+    groupBySQL = "GROUP BY trackDateLocal, task_name, task_desc "
     orderBySQL = "ORDER BY strftime('%Y-%m-%d',started) DESC "
     whereSQL = "WHERE started between date(:startDateUTC) and date(:endDateUTC,'+1 day')"
     if taskName:

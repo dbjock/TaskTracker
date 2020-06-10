@@ -11,7 +11,7 @@ import csv
 # App custom modules
 from tasktracker import taskdb
 
-APP_VER = "Purge Testing"
+APP_VER = "2.03"
 logger = logging.getLogger("TaskTracker")
 
 with open("log.conf", 'rt') as f:
@@ -255,26 +255,23 @@ def reportHours(dbConn, startDate, endDate, taskName=None, exportFile=None):
         if taskRow:  # Task found
             taskName = taskRow[1]
             logger.debug(f"converted taskName -> {taskName}")
-            pass
+            preMsg = f"Reporting on task: '{taskName}'"
         else:  # Task not found in database
             logger.info(
                 f"Not able to report on task '{taskName}' - it was not found")
             print(f"Not able to find task '{taskName}'")
             return
+    else:
+        preMsg = f"Reporting all tasks"
 
     logger.info(
         f"Reporting for startUTC: {startUTC.isoformat()}, lastUTC: {lastUTC.isoformat()}, taskName: {taskName}, exportFile: {exportFile}")
     print(
-        f"Reporting from {startLocal.strftime('%Y-%m-%d')} to {lastLocal.strftime('%Y-%m-%d')}")
+        f"{preMsg} from {startLocal.strftime('%Y-%m-%d')} to {lastLocal.strftime('%Y-%m-%d')}")
     # Fetch report rows from database
     rptRows = taskdb.rptHours(
         dbConn, taskName=taskName, startDateUTC=startUTC, endDateUTC=lastUTC)
     logger.debug(f"Rows returned: {len(rptRows)}")
-
-    if exportFile:
-        xpath = Path(exportFile)
-        xpath.parent.mkdir(parents=True, exist_ok=True)
-        _rptExport(rptRows, exportFile)
 
     if rptRows:  # Have Hours to report
         # Find Max len of taskname;
@@ -287,7 +284,18 @@ def reportHours(dbConn, startDate, endDate, taskName=None, exportFile=None):
             rptDate = row[0]
             taskName = row[1]
             workedStr = "{:.1f}".format(row[2]) + " Hours"
-            print(f"\t{rptDate} {taskName:{tasklen}} {workedStr}")
+            if row[3]:
+                taskDesc = f"({row[3]})"
+            else:
+                taskDesc = ""
+            print(f"\t{rptDate} {taskName:{tasklen}} {workedStr} {taskDesc}")
+
+        if exportFile:  # Export report data to file.
+            xpath = Path(exportFile)
+            xpath.parent.mkdir(parents=True, exist_ok=True)
+            _rptExport(rptRows, exportFile)
+            print(f"Reported exported to : {exportFile}")
+
     else:
         logger.info(f"No work hours to report")
         print("No work hours to report")
@@ -329,7 +337,11 @@ def _rptExport(rptRows, fileName):
             rptDate = row[0]
             taskName = row[1]
             workedStr = "{:.1f}".format(row[2])
-            row_writer.writerow([rptDate, taskName, workedStr])
+            if row[3]:
+                taskDesc = f"({row[3]})"
+            else:
+                taskDesc = ""
+            row_writer.writerow([rptDate, taskName, workedStr, taskDesc])
 
 
 def main(parser):
@@ -389,9 +401,10 @@ if __name__ == '__main__':
 
     # Add command for adding a task
     addTask_parser = commandSubparser.add_parser('add', help="Add a task")
+    addTask_parser.add_argument(
+        'taskname', help="Name of the task to edit", type=str)
     addTaskGroup = addTask_parser.add_argument_group(
         "Add Command (Adding a Task)")
-    addTaskGroup.add_argument('taskname', help="Name of task to add", type=str)
     addTaskGroup.add_argument(
         '-d', '--desc', help='Description of task',  metavar='taskdesc', type=str, dest='taskdesc')
 
