@@ -278,7 +278,6 @@ def delTask(dbConn, taskID):
       True/False
       False = Did not get deleted
     """
-    pass
     logger.info(f"Deleting taskid {taskID}")
     theVals = (taskID,)
     sql = "DELETE FROM task where id=?"
@@ -342,7 +341,8 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     logger.info(
         f"Getting hours worked from {startDateUTC.isoformat()} to {endDateUTC.isoformat()}")
     theVals = {'taskName': taskName,
-               'startDateUTC': startDateUTC, 'endDateUTC': endDateUTC}
+               'startDateUTC': startDateUTC,
+               'endDateUTC': endDateUTC}
     logger.debug(f"theVals: {theVals}")
     selectSQL = """Select strftime("%Y-%m-%d", datetime(strftime("%s", started), 'unixepoch', 'localtime')) as trackDateLocal, task_name, sum(hours_worked) as hours_worked, task.desc as task_desc FROM v_hours_wrked_detail as vWrkDetail JOIN task on task.id = task_id """
     groupBySQL = "GROUP BY trackDateLocal, task_name, task_desc "
@@ -365,7 +365,7 @@ def rptHours(dbConn, startDateUTC, endDateUTC, taskName=None):
     return rows
 
 
-def purgeDetail(dbConn, daysOld, taskName=None):
+def purgeDetail(dbConn, daysOld, taskID=None):
     """Delete work detail record from database that are daysOld
 
     Args:
@@ -374,10 +374,33 @@ def purgeDetail(dbConn, daysOld, taskName=None):
       taskName : task name to purge. (case insensitve) optional.
 
     Returns:
-      nothing
+      integer of rows deleted
     """
     logger.info(
-        f"Purging work details hours older than {daysOld} taskName = '{taskName}'")
+        f"Purging work details hours older than {daysOld} days taskID = '{taskID}'")
+
+    sqlDaysOld = f"{daysOld*-1} days"
+    theVals = {'taskID': taskID,
+               'sqlDaysOld': sqlDaysOld}
+    whereSQL = "WHERE started < date('now','localtime',:sqlDaysOld) "
+    if taskID:  # Purging for a specific task
+        whereSQL = whereSQL + "AND task_id = :taskID "
+    else:
+        pass
+    sql = "DELETE FROM tracking " + whereSQL
+    logger.debug(f"SQL: {sql}")
+    logger.debug(f"theVals: {theVals}")
+    cursor = dbConn.cursor()
+    try:
+        cursor.execute(sql, theVals)
+        rowsDeleted = cursor.rowcount
+        dbConn.commit()
+    except Exception as err:
+        logger.critical(f"Unexpected Error:  {err}", exc_info=True)
+        sys.exit()
+
+    logger.info(f"rows deleted: {rowsDeleted}")
+    return rowsDeleted
 
 
 if __name__ == '__main__':

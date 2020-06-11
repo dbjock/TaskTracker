@@ -187,12 +187,13 @@ def trackTask(dbConn, taskName):
 
 
 def purgeWrkHours(dbConn, daysOld, taskName=None):
-    """Purge work detail reords from database that are daysOld and optionaly just for a specific taskName"""
+    """Purge work detail records from database that are daysOld and optionaly just for a specific taskName"""
     msg = f"Purging work hour records older than {daysOld}"
     if taskName:
         taskInfo = taskdb.getTaskID(dbConn, taskName)
         if taskInfo:
             msg = msg + f" for task '{taskInfo[1]}'"
+            taskID = taskInfo[0]
         else:  # nothing found
             msg = f"Unable to find Task '{taskName}'"
             print(msg)
@@ -200,9 +201,13 @@ def purgeWrkHours(dbConn, daysOld, taskName=None):
             return
     else:
         msg = msg + f" for all tasks"
+        taskID = None
     print(msg)
     logger.info(msg)
-    taskdb.purgeDetail(dbConn, daysOld, taskName=taskName)
+    purgedRows = taskdb.purgeDetail(dbConn, daysOld, taskID)
+    msg = f"Records purge: {purgedRows}"
+    logger.info(msg)
+    print(msg)
 
 
 def reportHours(dbConn, startDate, endDate, taskName=None, exportFile=None):
