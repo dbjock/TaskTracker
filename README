@@ -21,11 +21,14 @@ add -h
 delete -h
 edit -h
 list -h
+purge -h
 report -h
 track -h
 ---------------------------------------------------------------------------------------
 Changes
-2.02a - Bug Fix: Reporting on a specific task would cause an error
+2.03 - Added ability to purge track detail records by days old or days old by task name.
+   - Enhance reporting to include task description and improvements on output.
+2.02a - Bug Fix: Reporting on a task would cause an error
 2.02 - Ability to delete a task with confirmation required.
 2.01 - Report allows exporting, and reformated output.
 2.00 - Didn't exist in github yet.
