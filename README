@@ -2,9 +2,6 @@ TaskTracker is a python application for tracking time you spend on a task. This 
 
 Python version 3.7, 3.8
 
-Required pip modules:
-PyYAML => 5.3.1
-
 ---------------------------
 Usage
 ---------------------------
