@@ -1,4 +1,6 @@
 .vscode
+logs
+venv
 __pycache__/
 log.conf
 data
