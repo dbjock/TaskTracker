@@ -1,7 +1,6 @@
 .vscode
+data
 logs
 venv
 __pycache__/
 log.conf
-data
-tasktracker.bat
