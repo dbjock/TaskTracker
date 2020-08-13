@@ -1,9 +1,8 @@
 # Required base modules
 from pathlib import Path
-import logging
 import logging.config
 import yaml
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import argparse
 import sys
 import csv
